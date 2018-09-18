@@ -56,6 +56,8 @@
 #include <iostream>
 #include <fstream>
 
+#define TIMER_PRINT_FREQ    1
+
 using namespace std;
 using namespace mfem;
 using namespace mfem::hydrodynamics;
@@ -438,6 +440,13 @@ int main(int argc, char *argv[])
    bool last_step = false;
    int steps = 0;
    BlockVector S_old(S);
+
+  double startTime, stopTime;
+  double localStart, localStop;
+  MPI_Barrier(MPI_COMM_WORLD);
+  startTime = MPI_Wtime();
+  localStart = startTime;
+
    for (int ti = 1; !last_step; ti++)
    {
       if (t + dt >= t_final)
@@ -553,6 +562,22 @@ int main(int argc, char *argv[])
             e_ofs.close();
          }
       }
+
+      if(ti % TIMER_PRINT_FREQ == 0) {
+        MPI_Barrier(MPI_COMM_WORLD);
+        localStop = MPI_Wtime();
+        if(mpi.Root()) {
+          printf("Time elapsed %d to %d : %f\n", ti-1, ti, localStop - localStart);
+        }
+        localStart = localStop;
+      }
+
+   }
+
+   MPI_Barrier(MPI_COMM_WORLD);
+   stopTime = MPI_Wtime();
+   if(mpi.Root()) {
+     printf("Time elapsed per iteration : %f s\n", (stopTime - startTime)/max_tsteps);
    }
 
    switch (ode_solver_type)
