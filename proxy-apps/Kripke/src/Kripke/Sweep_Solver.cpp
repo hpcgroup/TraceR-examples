@@ -38,6 +38,10 @@
 #include <vector>
 #include <stdio.h>
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 #define TIMER_PRINT_FREQ    1
 
 /**
@@ -72,6 +76,17 @@ int SweepSolver (Grid_Data *grid_data, bool block_jacobi)
 
   startTime = MPI_Wtime();
   localStart = startTime;
+
+#if WRITE_OTF2_TRACE
+  SCOREP_RECORDING_ON();
+  // Marks the beginning of code region to be repeated in simulation
+  SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_Loop", SCOREP_USER_REGION_TYPE_COMMON);
+  // Marks when to print a timer in simulation
+  if(!mpi_rank) {
+    SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_kripke", SCOREP_USER_REGION_TYPE_COMMON);
+    SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_kripke_iter", SCOREP_USER_REGION_TYPE_COMMON);
+  }
+#endif
 
   // Loop over iterations
   double part_last = 0.0;
@@ -148,17 +163,31 @@ int SweepSolver (Grid_Data *grid_data, bool block_jacobi)
       localStop = MPI_Wtime();
       if(mpi_rank == 0) {
         printf("Time elapsed %d to %d : %f\n", iter-1, iter, localStop - localStart);
+#if WRITE_OTF2_TRACE
+        SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_kripke_iter", SCOREP_USER_REGION_TYPE_COMMON);
+#endif
       }
       localStart = localStop;
     }
   }
 
+#if WRITE_OTF2_TRACE
+  // Marks the end of code region to be repeated in simulation
+  SCOREP_USER_REGION_BY_NAME_END("TRACER_Loop");
+#endif
+
   MPI_Barrier(MPI_COMM_WORLD);
   stopTime = MPI_Wtime();
 
   if(mpi_rank == 0) {
+#if WRITE_OTF2_TRACE
+    SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_kripke");
+#endif
     printf("Time elapsed per iteration : %f s\n", (stopTime - startTime)/grid_data->niter);
   }
+#if WRITE_OTF2_TRACE
+  SCOREP_RECORDING_OFF();
+#endif
 
   if(grid_data->trace_file){
     fclose(grid_data->trace_file);

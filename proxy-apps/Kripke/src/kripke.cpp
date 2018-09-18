@@ -54,6 +54,9 @@
 #include </bgsys/drivers/ppcfloor/spi/include/kernel/memory.h>
 #endif
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
 
 void usage(void){
   int myid;
@@ -209,6 +212,10 @@ int main(int argc, char **argv) {
    * Initialize MPI
    */
   MPI_Init(&argc, &argv);
+#if WRITE_OTF2_TRACE
+  SCOREP_RECORDING_OFF();
+#endif
+
   int myid;
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
   int num_tasks;
