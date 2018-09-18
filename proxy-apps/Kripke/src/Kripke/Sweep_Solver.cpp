@@ -38,6 +38,7 @@
 #include <vector>
 #include <stdio.h>
 
+#define TIMER_PRINT_FREQ    1
 
 /**
   Run solver iterations.
@@ -63,9 +64,14 @@ int SweepSolver (Grid_Data *grid_data, bool block_jacobi)
   }
 
 
+  double startTime, stopTime;
+  double localStart, localStop;
 
+  MPI_Barrier(MPI_COMM_WORLD);
   BLOCK_TIMER(grid_data->timing, Solve);
 
+  startTime = MPI_Wtime();
+  localStart = startTime;
 
   // Loop over iterations
   double part_last = 0.0;
@@ -137,6 +143,21 @@ int SweepSolver (Grid_Data *grid_data, bool block_jacobi)
       printf("iter %d: particle count=%e, change=%e\n", iter, part, (part-part_last)/part);
     }
     part_last = part;
+    if(iter % TIMER_PRINT_FREQ == 0) {
+      MPI_Barrier(MPI_COMM_WORLD);
+      localStop = MPI_Wtime();
+      if(mpi_rank == 0) {
+        printf("Time elapsed %d to %d : %f\n", iter-1, iter, localStop - localStart);
+      }
+      localStart = localStop;
+    }
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  stopTime = MPI_Wtime();
+
+  if(mpi_rank == 0) {
+    printf("Time elapsed per iteration : %f s\n", (stopTime - startTime)/grid_data->niter);
   }
 
   if(grid_data->trace_file){
