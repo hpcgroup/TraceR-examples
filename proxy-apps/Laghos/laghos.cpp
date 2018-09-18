@@ -56,6 +56,10 @@
 #include <iostream>
 #include <fstream>
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 #define TIMER_PRINT_FREQ    1
 
 using namespace std;
@@ -72,6 +76,10 @@ int main(int argc, char *argv[])
    // Initialize MPI.
    MPI_Session mpi(argc, argv);
    int myid = mpi.WorldRank();
+
+#if WRITE_OTF2_TRACE
+   SCOREP_RECORDING_OFF();
+#endif
 
    // Print the banner.
    if (mpi.Root()) { display_banner(cout); }
@@ -447,6 +455,18 @@ int main(int argc, char *argv[])
   startTime = MPI_Wtime();
   localStart = startTime;
 
+#if WRITE_OTF2_TRACE
+   SCOREP_RECORDING_ON();
+   // Marks the beginning of code region to be repeated in simulation
+   SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_Loop", SCOREP_USER_REGION_TYPE_COMMON);
+   // Marks when to print a timer in simulation
+   if(mpi.Root()) {
+      SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_laghos", SCOREP_USER_REGION_TYPE_COMMON);
+      SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_laghos_iter", SCOREP_USER_REGION_TYPE_COMMON);
+   }
+#endif
+
+
    for (int ti = 1; !last_step; ti++)
    {
       if (t + dt >= t_final)
@@ -568,17 +588,31 @@ int main(int argc, char *argv[])
         localStop = MPI_Wtime();
         if(mpi.Root()) {
           printf("Time elapsed %d to %d : %f\n", ti-1, ti, localStop - localStart);
+#if WRITE_OTF2_TRACE
+          SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_laghos_iter", SCOREP_USER_REGION_TYPE_COMMON);
+#endif
         }
         localStart = localStop;
       }
 
    }
 
+#if WRITE_OTF2_TRACE
+   // Marks the end of code region to be repeated in simulation
+   SCOREP_USER_REGION_BY_NAME_END("TRACER_Loop");
+#endif
+
    MPI_Barrier(MPI_COMM_WORLD);
    stopTime = MPI_Wtime();
    if(mpi.Root()) {
+#if WRITE_OTF2_TRACE
+     SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_laghos");
+#endif
      printf("Time elapsed per iteration : %f s\n", (stopTime - startTime)/max_tsteps);
    }
+#if WRITE_OTF2_TRACE
+   SCOREP_RECORDING_OFF();
+#endif
 
    switch (ode_solver_type)
    {
