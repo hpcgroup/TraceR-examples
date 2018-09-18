@@ -106,6 +106,7 @@ endif # ifeq ($(MACH),rzoz)
 
 #------------------------------------------------ END ----------------------------------------------------------
 
+
 MPI_INC_PATH = -I/usr/tce/packages/openmpi/openmpi-2.0.0-intel-18.0.1/include
 INCPATH += $(MPI_INC_PATH)
 CXXFLAGS = $(CFLAGS_CMG) $(INCPATH)
@@ -125,9 +126,9 @@ ifeq ($(DEBUG),on)
 endif
 
 OPENMP_FLAGS    = -qopenmp 
-CPPFLAGS += -DLINUX -DLinux -DUSE_MPI -DMPICH_SKIP_MPICXX $(GPROF_FLAGS)
-CPPFFLAGS = -DLINUX -DLinux -Dmpi -DMPI -DUSE_MPI -DMPICH_SKIP_MPICXX $(OPENMP_FLAGS) $(GPROF_FLAGS)
-FLIBS          += -lifcore -lm -lc -lsvml -Wl,-rpath -Wl,$(LD_LIBRARY_PATH) -Wl,--enable-new-dtags -L$(LD_LIBRARY_PATH) -lmpi_usempif08 -lmpi_usempi_ignore_tkr -lmpi_mpifh -lmpi
+CPPFLAGS += -DLINUX -DLinux -DUSE_MPI $(GPROF_FLAGS)
+CPPFFLAGS = -DLINUX -DLinux -Dmpi -DMPI -DUSE_MPI $(OPENMP_FLAGS) $(GPROF_FLAGS)
+FLIBS          += -lifcore -lm -lc -lsvml -lmpi_mpifh
 
 F90FLAGS +=  $(CPPFFLAGS)
 CXX		= mpicxx

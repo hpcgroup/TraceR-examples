@@ -20,6 +20,8 @@
 #include "TAU.h"
 #endif
 
+#define PRINT_TIMER_FREQ    1
+
 void initialize(MeshBase& myMesh, Teton<MeshBase>& theTeton, PartList<MeshBase>& myPartList,
                 int theNumGroups, int quadType, int theOrder, int Npolar, int Nazimu);
 
@@ -53,6 +55,7 @@ int main(int argc, char* argv[])
     if(myRank == 0)
     {
             cout<<" Executing UMT2013 Number of ranks ="<<numProcs<<endl;
+#if USE_OPENMP
 #pragma omp parallel
 {
 	    int myTID = omp_get_thread_num();
@@ -62,6 +65,7 @@ int main(int argc, char* argv[])
                  cout<<" and number of OMP threads  ="<< numThreads <<endl;
             }
 }
+#endif
     }
 
     if( argc >= 3 )
@@ -96,6 +100,12 @@ int main(int argc, char* argv[])
         }
     }
     
+    double goalTime = 0.000334;
+
+    if(argc >= 8) {
+      goalTime = atof(argv[7]);
+    }
+
 #ifdef PROFILING_ON
     TAU_PROFILE_INIT(argc,argv);
     TAU_PROFILE("main()","",TAU_DEFAULT);
@@ -168,7 +178,6 @@ int main(int argc, char* argv[])
     if(myRank == 0)
         cout<<"    done."<<endl;
     
-    double goalTime = 0.000334;
 //     double goalTime = 0.0000334;
 
     double time;
@@ -184,8 +193,15 @@ int main(int argc, char* argv[])
     int cumulativeIterationCount= 0;
     double cumulativeWorkTime = 0.0;
     
+    int iter = 0;
+    double startTime, stopTime;
+    double localStart, localStop;
+
+    MPI_Barrier(MPI_COMM_WORLD);
     if(myRank == 0)
         cout<<" Starting time advance..."<<endl;
+    startTime = MPI_Wtime();
+    localStart = startTime;
     for(time=0;time<goalTime; time+= dt)
     {
         dt = newDT( myTetonObject );
@@ -201,11 +217,26 @@ int main(int argc, char* argv[])
     
         cumulativeWorkTime += advance(myMesh, myTetonObject, myPartList);
         cumulativeIterationCount += myTetonObject.ninrt;
+        if(iter % TIMER_PRINT_FREQ == 0) {
+          MPI_Barrier(MPI_COMM_WORLD);
+          localStop = MPI_Wtime();
+          if(myRank == 0) {
+            printf("Time elapsed %d to %d : %f\n", iter-1, iter, localStop - localStart);
+          }
+          localStart = localStop;
+        }
+        iter++;
     }
+    MPI_Barrier(MPI_COMM_WORLD);
+    stopTime = MPI_Wtime();
     if( myRank == 0 )
         cout<<" SuOlson Test version "<<theVersionNumber<<" completed at time= "<<time<<"  goalTime= "<<goalTime<<endl;
 
-    checkAnalyticAnswer(goalTime,myMesh,myPartList);     
+    if(myRank == 0) {
+      printf("Time elapsed per iteration : %f s\n", (stopTime - startTime)/iter);
+    }
+
+    checkAnalyticAnswer(goalTime,myMesh,myPartList);
 
     cumulativeWorkTime/=1.0e6;  // microseconds -> seconds
     if( myRank == 0 )
