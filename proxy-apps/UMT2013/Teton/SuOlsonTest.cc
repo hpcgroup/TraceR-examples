@@ -20,7 +20,11 @@
 #include "TAU.h"
 #endif
 
-#define PRINT_TIMER_FREQ    1
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
+#define TIMER_PRINT_FREQ    1
 
 void initialize(MeshBase& myMesh, Teton<MeshBase>& theTeton, PartList<MeshBase>& myPartList,
                 int theNumGroups, int quadType, int theOrder, int Npolar, int Nazimu);
@@ -43,6 +47,9 @@ int main(int argc, char* argv[])
     std::string theVersionNumber = "1.0";
     
     MPI_Init(&argc,&argv);
+#if WRITE_OTF2_TRACE
+    SCOREP_RECORDING_OFF();
+#endif
     MPI_Comm_rank(MPI_COMM_WORLD,&myRank);
     MPI_Comm_size(MPI_COMM_WORLD,&numProcs);
     
@@ -197,6 +204,17 @@ int main(int argc, char* argv[])
     double startTime, stopTime;
     double localStart, localStop;
 
+#if WRITE_OTF2_TRACE
+    SCOREP_RECORDING_ON();
+    // Marks the beginning of code region to be repeated in simulation
+    SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_Loop", SCOREP_USER_REGION_TYPE_COMMON);
+    // Marks when to print a timer in simulation
+    if(myRank) {
+        SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_umt", SCOREP_USER_REGION_TYPE_COMMON);
+        SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_umt_iter", SCOREP_USER_REGION_TYPE_COMMON);
+    }
+#endif
+
     MPI_Barrier(MPI_COMM_WORLD);
     if(myRank == 0)
         cout<<" Starting time advance..."<<endl;
@@ -221,20 +239,36 @@ int main(int argc, char* argv[])
           MPI_Barrier(MPI_COMM_WORLD);
           localStop = MPI_Wtime();
           if(myRank == 0) {
+#if WRITE_OTF2_TRACE
+            SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_umt_iter", SCOREP_USER_REGION_TYPE_COMMON);
+#endif
             printf("Time elapsed %d to %d : %f\n", iter-1, iter, localStop - localStart);
           }
           localStart = localStop;
         }
         iter++;
     }
+
+#if WRITE_OTF2_TRACE
+    // Marks the end of code region to be repeated in simulation
+    SCOREP_USER_REGION_BY_NAME_END("TRACER_Loop");
+#endif
+
     MPI_Barrier(MPI_COMM_WORLD);
     stopTime = MPI_Wtime();
+
     if( myRank == 0 )
         cout<<" SuOlson Test version "<<theVersionNumber<<" completed at time= "<<time<<"  goalTime= "<<goalTime<<endl;
 
     if(myRank == 0) {
+#if WRITE_OTF2_TRACE
+      SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_umt");
+#endif
       printf("Time elapsed per iteration : %f s\n", (stopTime - startTime)/iter);
     }
+#if WRITE_OTF2_TRACE
+    SCOREP_RECORDING_OFF();
+#endif
 
     checkAnalyticAnswer(goalTime,myMesh,myPartList);
 
