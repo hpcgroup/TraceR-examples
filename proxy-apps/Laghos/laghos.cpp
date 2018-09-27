@@ -590,7 +590,7 @@ int main(int argc, char *argv[])
 #if WRITE_OTF2_TRACE
           SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_laghos_region");
 #endif
-          printf("Time elapsed %d to %d : %f\n", ti-TIMER_PRINT_FREQ, ti, localStop - localStart);
+          printf("Time elapsed %d to %d : %f\n", ti-TIMER_PRINT_FREQ+1, ti, localStop - localStart);
 #if WRITE_OTF2_TRACE
           SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_laghos_region", SCOREP_USER_REGION_TYPE_COMMON);
 #endif
