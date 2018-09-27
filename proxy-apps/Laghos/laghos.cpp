@@ -462,7 +462,7 @@ int main(int argc, char *argv[])
    // Marks when to print a timer in simulation
    if(mpi.Root()) {
       SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_laghos", SCOREP_USER_REGION_TYPE_COMMON);
-      SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_laghos_iter", SCOREP_USER_REGION_TYPE_COMMON);
+      SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_laghos_region", SCOREP_USER_REGION_TYPE_COMMON);
    }
 #endif
 
@@ -587,9 +587,12 @@ int main(int argc, char *argv[])
         MPI_Barrier(MPI_COMM_WORLD);
         localStop = MPI_Wtime();
         if(mpi.Root()) {
-          printf("Time elapsed %d to %d : %f\n", ti-1, ti, localStop - localStart);
 #if WRITE_OTF2_TRACE
-          SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_laghos_iter", SCOREP_USER_REGION_TYPE_COMMON);
+          SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_laghos_region");
+#endif
+          printf("Time elapsed %d to %d : %f\n", ti-TIMER_PRINT_FREQ, ti, localStop - localStart);
+#if WRITE_OTF2_TRACE
+          SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_laghos_region", SCOREP_USER_REGION_TYPE_COMMON);
 #endif
         }
         localStart = localStop;

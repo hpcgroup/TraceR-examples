@@ -84,7 +84,7 @@ int SweepSolver (Grid_Data *grid_data, bool block_jacobi)
   // Marks when to print a timer in simulation
   if(!mpi_rank) {
     SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_kripke", SCOREP_USER_REGION_TYPE_COMMON);
-    SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_kripke_iter", SCOREP_USER_REGION_TYPE_COMMON);
+    SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_kripke_region", SCOREP_USER_REGION_TYPE_COMMON);
   }
 #endif
 
@@ -162,9 +162,12 @@ int SweepSolver (Grid_Data *grid_data, bool block_jacobi)
       MPI_Barrier(MPI_COMM_WORLD);
       localStop = MPI_Wtime();
       if(mpi_rank == 0) {
-        printf("Time elapsed %d to %d : %f\n", iter-1, iter, localStop - localStart);
 #if WRITE_OTF2_TRACE
-        SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_kripke_iter", SCOREP_USER_REGION_TYPE_COMMON);
+        SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_kripke_region");
+#endif
+        printf("Time elapsed %d to %d : %f\n", iter-TIMER_PRINT_FREQ, iter, localStop - localStart);
+#if WRITE_OTF2_TRACE
+        SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_kripke_region", SCOREP_USER_REGION_TYPE_COMMON);
 #endif
       }
       localStart = localStop;

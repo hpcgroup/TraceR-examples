@@ -209,9 +209,9 @@ int main(int argc, char* argv[])
     // Marks the beginning of code region to be repeated in simulation
     SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_Loop", SCOREP_USER_REGION_TYPE_COMMON);
     // Marks when to print a timer in simulation
-    if(myRank) {
+    if(myRank == 0) {
         SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_umt", SCOREP_USER_REGION_TYPE_COMMON);
-        SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_umt_iter", SCOREP_USER_REGION_TYPE_COMMON);
+        SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_umt_region", SCOREP_USER_REGION_TYPE_COMMON);
     }
 #endif
 
@@ -240,9 +240,12 @@ int main(int argc, char* argv[])
           localStop = MPI_Wtime();
           if(myRank == 0) {
 #if WRITE_OTF2_TRACE
-            SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_umt_iter", SCOREP_USER_REGION_TYPE_COMMON);
+            SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_umt_region");
 #endif
-            printf("Time elapsed %d to %d : %f\n", iter-1, iter, localStop - localStart);
+            printf("Time elapsed %d to %d : %f\n", iter-TIMER_PRINT_FREQ, iter, localStop - localStart);
+#if WRITE_OTF2_TRACE
+            SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_umt_region", SCOREP_USER_REGION_TYPE_COMMON);
+#endif
           }
           localStart = localStop;
         }
