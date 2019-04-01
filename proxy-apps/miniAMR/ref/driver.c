@@ -33,6 +33,10 @@
 #include "timer.h"
 #include "proto.h"
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 // Main driver for program.
 void driver(void)
 {
@@ -58,8 +62,22 @@ void driver(void)
 
    nb_min = nb_max = global_active;
 
+#if WRITE_OTF2_TRACE
+   int myrank = 0;
+   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+   SCOREP_RECORDING_ON();
+   SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_Loop", SCOREP_USER_REGION_TYPE_COMMON);
+   if( 0 == myrank ) {
+       SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_miniamr", SCOREP_USER_REGION_TYPE_COMMON);
+   }
+#endif
    if (use_time) delta = calc_time_step();
    for (sim_time = 0.0, done = comm_stage =calc_stage=0, ts = 1; !done; ts++) {
+#if WRITE_OTF2_TRACE
+       if( 0 == myrank ) { 
+           SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_miniamr_region", SCOREP_USER_REGION_TYPE_COMMON);
+       }
+#endif
       for (stage=0; stage < stages_per_ts; stage++,comm_stage++,calc_stage++) {
          total_blocks += global_active;
          if (global_active < nb_min)
@@ -121,11 +139,27 @@ void driver(void)
       } else
          if (ts >= num_tsteps)
             done = 1;
+
+#if WRITE_OTF2_TRACE
+       if( 0 == myrank ) {
+           SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_miniamr_region");
+       }
+#endif
    }
 
    end_time = sim_time;
    num_tsteps = ts - 1;
    timer_all = timer() - t1;
+
+#if WRITE_OTF2_TRACE
+    SCOREP_USER_REGION_BY_NAME_END("TRACER_Loop");
+
+    if( 0 == myrank ) {
+        SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_miniamr");
+    }
+
+    SCOREP_RECORDING_OFF();
+#endif
 }
 
 // Calculate time step increment.  If an object intersects the unit cube

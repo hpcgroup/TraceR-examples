@@ -1,7 +1,7 @@
-CC   = cc
-LD   = cc
+CC   = scorep --user mpicc
+LD   = scorep --user mpicc
 CPPFLAGS = -I.
-CFLAGS = -O3
+CFLAGS = -O3 -DWRITE_OTF2_TRACE=1
 LDFLAGS =
 LDLIBS = -lm
 
