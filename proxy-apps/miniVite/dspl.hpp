@@ -58,6 +58,10 @@
 #include "graph.hpp"
 #include "utils.hpp"
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 struct Comm {
   GraphElem size;
   GraphWeight degree;
@@ -1282,13 +1286,25 @@ GraphWeight distLouvainMethod(const int me, const int nprocs, const Graph &dg,
   t1 = MPI_Wtime();
   std::cout << "[" << me << "]Initial communication setup time before Louvain iteration (in s): " << (t1 - t0) << std::endl;
 #endif
- 
+
+ #if WRITE_OTF2_TRACE
+      SCOREP_RECORDING_ON();
+      SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_Loop", SCOREP_USER_REGION_TYPE_COMMON);
+      if( 0 == me ) {
+          SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_minivite", SCOREP_USER_REGION_TYPE_COMMON);
+      }
+#endif
   // start Louvain iteration
   while(true) {
 #ifdef DEBUG_PRINTF  
     const double t2 = MPI_Wtime();
     if (me == 0)
         std::cout << "Starting Louvain iteration: " << numIters << std::endl;
+#endif
+#if WRITE_OTF2_TRACE
+    if( 0 == me ) {
+          SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_minivite_region", SCOREP_USER_REGION_TYPE_COMMON);
+    }
 #endif
     numIters++;
 
@@ -1369,7 +1385,28 @@ GraphWeight distLouvainMethod(const int me, const int nprocs, const Graph &dg,
         currComm[i] = targetComm[i];
         targetComm[i] = tmp;
     }
+#if WRITE_OTF2_TRACE
+    if( 0 == me ) {
+          SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_minivite_region");
+    }
+#endif
+
   } // end of Louvain iteration
+
+#if WRITE_OTF2_TRACE
+    if( 0 == me ) {
+        SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_minivite_region");
+    }
+
+    SCOREP_USER_REGION_BY_NAME_END("TRACER_Loop");
+
+    if( 0 == me ) {
+        SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_minivite");
+    }
+
+    SCOREP_RECORDING_OFF();
+#endif
+
 
 #if defined(USE_MPI_RMA)
   MPI_Win_unlock_all(commwin);

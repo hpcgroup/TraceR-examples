@@ -55,6 +55,10 @@
 
 #include "dspl.hpp"
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 static std::string inputFileName;
 static int me, nprocs;
 static int ranksPerNode = 1;
@@ -74,6 +78,9 @@ int main(int argc, char *argv[])
   double t0, t1, t2, t3, ti = 0.0;
   
   MPI_Init(&argc, &argv);
+#if WRITE_OTF2_TRACE
+      SCOREP_RECORDING_OFF();
+#endif
 
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   MPI_Comm_rank(MPI_COMM_WORLD, &me);
