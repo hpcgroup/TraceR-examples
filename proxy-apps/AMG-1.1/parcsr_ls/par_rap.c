@@ -1297,9 +1297,9 @@ hypre_BoomerAMGBuildCoarseOperatorKT( hypre_ParCSRMatrix  *RT,
 #ifdef HYPRE_USING_OPENMP
 #pragma omp parallel for HYPRE_SMP_SCHEDULE
 #endif
-   for (i=0; i < RAP_ext_size; i++)
+   for (i=0; i < RAP_ext_size; i++) {
       if (RAP_ext_j[i] < first_col_diag_RAP 
-                        || RAP_ext_j[i] > last_col_diag_RAP)
+                        || RAP_ext_j[i] > last_col_diag_RAP) {
             RAP_ext_j[i] = num_cols_diag_P
 #ifdef HYPRE_CONCURRENT_HOPSCOTCH
                                 + hypre_UnorderedIntMapGet(&col_map_offd_RAP_inverse, RAP_ext_j[i]);
@@ -1307,8 +1307,11 @@ hypre_BoomerAMGBuildCoarseOperatorKT( hypre_ParCSRMatrix  *RT,
                                 + hypre_BinarySearch(col_map_offd_RAP,
                                                 RAP_ext_j[i],num_cols_offd_RAP);
 #endif
-      else
+      }
+      else {
             RAP_ext_j[i] -= first_col_diag_RAP;
+      }
+   }
 
 #ifdef HYPRE_CONCURRENT_HOPSCOTCH
    if (num_cols_offd_RAP)

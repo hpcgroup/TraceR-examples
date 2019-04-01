@@ -37,7 +37,8 @@ CFLAGS = \
  -I../parcsr_ls\
  -I../krylov\
  ${INCLUDE_CFLAGS}\
- -DHYPRE_TIMING
+ -DHYPRE_TIMING\
+ -DWRITE_OTF2_TRACE=1
                                                                                                
 LFLAGS =\
  -L.\

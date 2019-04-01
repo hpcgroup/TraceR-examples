@@ -1,4 +1,4 @@
-#BHEADER**********************************************************************
+512 #BHEADER**********************************************************************
 # Copyright (c) 2017,  Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 # Written by Ulrike Yang (yang11@llnl.gov) et al. CODE-LLNL-738-322.
@@ -23,7 +23,7 @@
 
 # set the compiler here
 #CC = gcc
-CC = mpicc
+CC = scorep --user mpicc
 #CC = mpixlc_r
 
 # set compile flags here
@@ -43,11 +43,13 @@ CC = mpicc
 #INCLUDE_CFLAGS = -g -DTIMER_USE_MPI 
 #INCLUDE_CFLAGS = -g -DTIMER_USE_MPI -DHYPRE_USING_OPENMP
 #INCLUDE_CFLAGS = -O2 -DTIMER_USE_MPI -DHYPRE_USING_OPENMP -DHYPRE_BIGINT -fopenmp
-INCLUDE_CFLAGS = -O2 -DTIMER_USE_MPI -DHYPRE_USING_OPENMP -fopenmp -DHYPRE_HOPSCOTCH -DHYPRE_USING_PERSISTENT_COMM -DHYPRE_BIGINT
+#INCLUDE_CFLAGS = -O2 -DTIMER_USE_MPI -DHYPRE_USING_OPENMP -fopenmp -DHYPRE_HOPSCOTCH -DHYPRE_USING_PERSISTENT_COMM -DHYPRE_BIGINT
+INCLUDE_CFLAGS = -g -O2 -DTIMER_USE_MPI -DHYPRE_HOPSCOTCH -DHYPRE_USING_PERSISTENT_COMM -DHYPRE_BIGINT
 #INCLUDE_CFLAGS = -O2 -DTIMER_USE_MPI -DHYPRE_USING_OPENMP -qsmp=omp -qmaxmem=-1 -DHYPRE_HOPSCOTCH -DHYPRE_USING_PERSISTENT_COMM -DHYPRE_BIGINT
 
 # set link flags here
 #INCLUDE_LFLAGS = -lm -qsmp=omp
-INCLUDE_LFLAGS = -lm -fopenmp
+#INCLUDE_LFLAGS = -lm -fopenmp
+INCLUDE_LFLAGS = -lm
 #INCLUDE_LFLAGS = -lm 
 

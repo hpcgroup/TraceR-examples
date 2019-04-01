@@ -37,6 +37,10 @@
 
 #include <time.h>
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -142,6 +146,9 @@ main( hypre_int argc,
 
    /* Initialize MPI */
    hypre_MPI_Init(&argc, &argv);
+#if WRITE_OTF2_TRACE
+      SCOREP_RECORDING_OFF();
+#endif
 
    hypre_MPI_Comm_rank(hypre_MPI_COMM_WORLD, &myid );
 
@@ -459,8 +466,20 @@ main( hypre_int argc,
       time_index = hypre_InitializeTiming("GMRES Solve");
       hypre_MPI_Barrier(hypre_MPI_COMM_WORLD);
       hypre_BeginTiming(time_index);
+
+#if WRITE_OTF2_TRACE
+      SCOREP_RECORDING_ON();
+      SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_Loop", SCOREP_USER_REGION_TYPE_COMMON);
+      if( 0 == myid ) {
+          SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_amg", SCOREP_USER_REGION_TYPE_COMMON);
+      }
+#endif
+
       for (j=0; j < time_steps; j++)
       {
+         if( 0 == myid ) {
+             SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_amg_region", SCOREP_USER_REGION_TYPE_COMMON);
+         }
  
          HYPRE_ParCSRGMRESCreate(hypre_MPI_COMM_WORLD, &pcg_solver);
          HYPRE_GMRESSetKDim(pcg_solver, k_dim);
@@ -550,7 +569,16 @@ main( hypre_int argc,
             HYPRE_ParVectorSetConstantValues(x,0.0);
             HYPRE_ParVectorSetConstantValues(b,1.0);
          }
+#if WRITE_OTF2_TRACE
+         if( 0 == myid ) {
+             SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_amg_region");
+         }
+#endif
+
       }
+#if WRITE_OTF2_TRACE
+      SCOREP_USER_REGION_BY_NAME_END("TRACER_Loop");
+#endif
       hypre_MPI_Barrier(hypre_MPI_COMM_WORLD);
       hypre_EndTiming(time_index);
       hypre_PrintTiming("Problem 2: Cumulative AMG-GMRES Solve Time", &wall_time, hypre_MPI_COMM_WORLD);
@@ -558,6 +586,9 @@ main( hypre_int argc,
       hypre_ClearTiming();
       if (myid == 0)
       {
+#if WRITE_OTF2_TRACE
+         SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_amg");
+#endif
          hypre_printf("\n");
          hypre_printf("No. of Time Steps = %d\n", time_steps);
          hypre_printf("Cum. No. of Iterations = %d\n", cum_num_its);
@@ -568,6 +599,9 @@ main( hypre_int argc,
          printf ("\nFigure of Merit (FOM_2): %e\n\n", (cum_nnz_AP*(HYPRE_Real)(num_iterations +time_steps)/ wall_time));
          hypre_printf("\n");
       }
+#if WRITE_OTF2_TRACE
+      SCOREP_RECORDING_OFF();
+#endif
    }
  
 
