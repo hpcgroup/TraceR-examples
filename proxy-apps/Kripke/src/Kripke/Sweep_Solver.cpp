@@ -84,13 +84,17 @@ int SweepSolver (Grid_Data *grid_data, bool block_jacobi)
   // Marks when to print a timer in simulation
   if(!mpi_rank) {
     SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_kripke", SCOREP_USER_REGION_TYPE_COMMON);
-    SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_kripke_region", SCOREP_USER_REGION_TYPE_COMMON);
   }
 #endif
 
   // Loop over iterations
   double part_last = 0.0;
   for(int iter = 0;iter < grid_data->niter;++ iter){
+#if WRITE_OTF2_TRACE
+    if(!mpi_rank) {
+      SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_kripke_region", SCOREP_USER_REGION_TYPE_COMMON);
+    }
+#endif
 
     /*
      * Compute the RHS:  rhs = LPlus*S*L*psi + Q
@@ -166,9 +170,6 @@ int SweepSolver (Grid_Data *grid_data, bool block_jacobi)
         SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_kripke_region");
 #endif
         printf("Time elapsed %d to %d : %f\n", iter-TIMER_PRINT_FREQ+1, iter, localStop - localStart);
-#if WRITE_OTF2_TRACE
-        SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_kripke_region", SCOREP_USER_REGION_TYPE_COMMON);
-#endif
       }
       localStart = localStop;
     }
