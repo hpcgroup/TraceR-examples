@@ -147,7 +147,7 @@ main( hypre_int argc,
    /* Initialize MPI */
    hypre_MPI_Init(&argc, &argv);
 #if WRITE_OTF2_TRACE
-      SCOREP_RECORDING_OFF();
+   SCOREP_RECORDING_OFF();
 #endif
 
    hypre_MPI_Comm_rank(hypre_MPI_COMM_WORLD, &myid );
@@ -477,9 +477,12 @@ main( hypre_int argc,
 
       for (j=0; j < time_steps; j++)
       {
+
+#if WRITE_OTF2_TRACE
          if( 0 == myid ) {
              SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_amg_region", SCOREP_USER_REGION_TYPE_COMMON);
          }
+#endif
  
          HYPRE_ParCSRGMRESCreate(hypre_MPI_COMM_WORLD, &pcg_solver);
          HYPRE_GMRESSetKDim(pcg_solver, k_dim);
