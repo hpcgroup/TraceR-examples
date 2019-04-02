@@ -54,13 +54,13 @@
 DFFT_MPI_DIR ?= build
 
 # MPI C compiler
-DFFT_MPI_CC ?= mpicc
+DFFT_MPI_CC ?= scorep --user mpicc
 
 # MPI C++ compiler
-DFFT_MPI_CXX ?= mpicxx
+DFFT_MPI_CXX ?= scorep --user mpicxx
 
 # MPI Fortran compiler
-DFFT_MPI_FC ?= mpif90
+DFFT_MPI_FC ?= scorep --user mpif90
 
 # pre-processor flags
 DFFT_MPI_CPPFLAGS ?= -DDFFT_TIMING=2

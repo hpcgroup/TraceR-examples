@@ -80,6 +80,10 @@
 #endif
 #include "Dfft.hpp"
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 #define ALIGN 16
 
 using namespace hacc;
@@ -297,9 +301,20 @@ void test(MPI_Comm comm,
   }
   MPI_Barrier(CartComm);
 
+#if WRITE_OTF2_TRACE
+      SCOREP_RECORDING_ON();
+      SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_Loop", SCOREP_USER_REGION_TYPE_COMMON);
+      if( 0 == rank ) {
+          SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_swfft", SCOREP_USER_REGION_TYPE_COMMON);
+      }
+#endif
+
   for(size_t i=0; i<repetitions; i++) {
     if(rank==0) {
       std::cout << std::endl << "TESTING " << i << std::endl << std::endl;
+#if WRITE_OTF2_TRACE
+      SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_swfft_region", SCOREP_USER_REGION_TYPE_COMMON);
+#endif
     }
     MPI_Barrier(CartComm);
 
@@ -325,7 +340,22 @@ void test(MPI_Comm comm,
 
     // check array contents in r-space
     check_rspace(dfft, &a[0]);
+#if WRITE_OTF2_TRACE
+    if( 0 == rank ) {
+      SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_swfft_region");
+    }
+#endif
   }
+
+#if WRITE_OTF2_TRACE
+  SCOREP_USER_REGION_BY_NAME_END("TRACER_Loop");
+
+  if( 0 == rank ) {
+      SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_swfft");
+  }
+
+  SCOREP_RECORDING_OFF();
+#endif
 }
 
 
@@ -339,6 +369,9 @@ int main(int argc, char *argv[])
   }
   
   MPI_Init(&argc, &argv);
+#if WRITE_OTF2_TRACE
+  SCOREP_RECORDING_OFF();
+#endif
 
   size_t repetitions = atol(argv[1]);
   int ng[3];
