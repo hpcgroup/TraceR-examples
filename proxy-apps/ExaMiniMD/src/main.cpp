@@ -45,10 +45,17 @@
 #include "mpi.h"
 #endif
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 int main(int argc, char* argv[]) {
 
    #ifdef EXAMINIMD_ENABLE_MPI
    MPI_Init(&argc,&argv);
+#if WRITE_OTF2_TRACE
+   SCOREP_RECORDING_OFF();
+#endif
    #endif
 
    Kokkos::initialize(argc,argv);

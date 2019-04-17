@@ -43,6 +43,11 @@
 
 #define MAXPATHLEN 1024
 
+
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 ExaMiniMD::ExaMiniMD() {
   // First we need to create the System data structures
   // They are used by input
@@ -187,8 +192,23 @@ void ExaMiniMD::run(int nsteps) {
   double last_time;
   Kokkos::Timer timer,force_timer,comm_timer,neigh_timer,other_timer;
 
+#if WRITE_OTF2_TRACE
+   SCOREP_RECORDING_ON();
+   // Marks the beginning of code region to be repeated in simulation
+   SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_Loop", SCOREP_USER_REGION_TYPE_COMMON);
+   // Marks when to print a timer in simulation
+   if(!comm->process_rank()) {
+       SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_examinimd", SCOREP_USER_REGION_TYPE_COMMON);
+   }
+#endif
+
   // Timestep Loop
   for(int step = 1; step <= nsteps; step++ ) {
+#if WRITE_OTF2_TRACE
+       if(!comm->process_rank()) {
+           SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_examinimd_region", SCOREP_USER_REGION_TYPE_COMMON);
+       }
+#endif
     
     // Do first part of the verlet time step integration 
     other_timer.reset();
@@ -272,7 +292,26 @@ void ExaMiniMD::run(int nsteps) {
       check_correctness(step);
 
     other_time += other_timer.seconds();
+#if WRITE_OTF2_TRACE
+       if(!comm->process_rank()) {
+           SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_examinimd_region");
+       }
+#endif
+
   }
+
+#if WRITE_OTF2_TRACE
+  if(!comm->process_rank()) {
+      SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_examinimd");
+  }
+
+  SCOREP_USER_REGION_BY_NAME_END("TRACER_Loop");
+#endif
+
+#if WRITE_OTF2_TRACE
+  SCOREP_RECORDING_OFF();
+#endif
+
 
   double time = timer.seconds();
   T_FLOAT T = temp.compute(system);

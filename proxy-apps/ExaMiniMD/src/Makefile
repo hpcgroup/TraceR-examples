@@ -1,8 +1,9 @@
 #Kokkos root path
 KOKKOS_PATH = ${HOME}/kokkos
+#KOKKOS_PATH = /g/g90/ggeorgak/projects/spack/opt/spack/linux-rhel7-x86_64/intel-18.0.1/kokkos-2.8.00-53vh2k5moctopxbt4zilu4p73gi2e4iy/
 
 #Backend and architecture configuration
-KOKKOS_DEVICES=OpenMP
+KOKKOS_DEVICES=Serial
 KOKKOS_ARCH = ""
 
 #MPI On or off (1/0)
@@ -20,8 +21,9 @@ CXXFLAGS = -O3 -g
 LINKFLAGS = -O3 -g
 
 ifeq ($(MPI), 1)
-  CXX = mpicxx
-  CXXFLAGS += -DEXAMINIMD_ENABLE_MPI
+  SCOREP = $(HOME)/opt/scorep-5.0/bin/scorep --user --nocompiler --noopenmp --nopomp --nocuda --noopenacc --noopencl --nomemory
+  CXX = $(SCOREP) mpicxx
+  CXXFLAGS += -DEXAMINIMD_ENABLE_MPI -DWRITE_OTF2_TRACE=1
 else
   ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
     CXX = $(KOKKOS_PATH)/bin/nvcc_wrapper
