@@ -1,5 +1,6 @@
-CC   = scorep --user mpicc
-LD   = scorep --user mpicc
+SCOREP = $(HOME)/opt/scorep-5.0/bin/scorep --user --nocompiler --noopenmp --nopomp --nocuda --noopenacc --noopencl --nomemory
+CC   = $(SCOREP) mpicc
+LD   = $(SCOREP) mpicc
 CPPFLAGS = -I.
 CFLAGS = -O3 -DWRITE_OTF2_TRACE=1
 LDFLAGS =
