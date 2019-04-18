@@ -56,6 +56,11 @@
 
 #include "DG_FUNC.h"
 
+
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 void EW::set_dg_orders( int qu, int qv)
 {
     m_qu = qu;
@@ -341,7 +346,16 @@ void EW::timeStepLoopdGalerkin()
     sbx_e = (ilast == (m_global_nx[g]-1)) ? 1 : 0;
     sby_b = (jfirst == 1) ? 1 : 0;                
     sby_e = (jlast == (m_global_ny[g]-1)) ? 1 : 0;
-    
+#if WRITE_OTF2_TRACE
+    SCOREP_RECORDING_ON();
+    // Marks the beginning of code region to be repeated in simulation
+    SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_Loop", SCOREP_USER_REGION_TYPE_COMMON);
+    // Marks when to print a timer in simulation
+    if(!m_myrank) {
+        SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_sw4lite", SCOREP_USER_REGION_TYPE_COMMON);
+    }
+#endif
+
     for (int it = 1; it <= nsteps; it++){
         t = (it-1)*dt;
         if (got_src == 1){
@@ -352,6 +366,11 @@ void EW::timeStepLoopdGalerkin()
         start_next_step(updg,vpdg,udg,vdg,&ifirst,&ilast,&jfirst,&jlast,&kfirst,&klast,&q_v,&q_u);
         
         for (int itay = 1; itay <= ntay; itay++){
+#if WRITE_OTF2_TRACE
+            if(!m_myrank) {
+                SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_sw4lite_dg_region", SCOREP_USER_REGION_TYPE_COMMON);
+            }
+#endif
 
             build_w_and_v(udg,vdg,w_in_all_faces,v_in_all_faces);
 
@@ -399,7 +418,28 @@ void EW::timeStepLoopdGalerkin()
                                      &q_v,&q_u);
             taylor_swap(utdg,vtdg,updg,vpdg,udg,vdg,&df,&ifirst,&ilast,&jfirst,&jlast,&kfirst,&klast,&q_v,&q_u);
             df = df*dt/(1+itay);
+
+#if WRITE_OTF2_TRACE
+            if(!m_myrank) {
+                SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_sw4lite_dg_region");
+            }
+#endif
+
         }
+#if WRITE_OTF2_TRACE
+        SCOREP_USER_REGION_BY_NAME_END("TRACER_Loop");
+#endif
+
+#if WRITE_OTF2_TRACE
+        if(!m_myrank) {
+            SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_sw4lite");
+        }
+#endif
+
+#if WRITE_OTF2_TRACE
+        SCOREP_RECORDING_OFF();
+#endif
+
             // Swap the new into the old
         start_next_step(udg,vdg,updg,vpdg,&ifirst,&ilast,&jfirst,&jlast,&kfirst,&klast,&q_v,&q_u);
         t = t+dt;

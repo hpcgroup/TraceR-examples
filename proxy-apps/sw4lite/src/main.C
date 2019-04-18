@@ -35,12 +35,19 @@
 using namespace std;
 #include "EW.h"
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 int main( int argc, char** argv )
 {
    //MPI_Init(&argc, &argv);
    int myRank;
    double  time_start, time_end;
    MPI_Init(&argc, &argv);
+#if WRITE_OTF2_TRACE
+   SCOREP_RECORDING_OFF();
+#endif
    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
 
    MPI_Barrier(MPI_COMM_WORLD);

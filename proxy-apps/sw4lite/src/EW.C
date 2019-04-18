@@ -61,6 +61,10 @@
 #include "F77_FUNC.h"
 #include "EWCuda.h"
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 #ifndef SW4_CROUTINES
 extern "C" {
    void F77_FUNC(rhs4th3fortsgstr,RHS4TH3FORTSGSTR)( int*, int*, int*, int*, int*, int*, int*, int*, 
@@ -2479,7 +2483,6 @@ void EW::timesteploop( vector<Sarray>& U, vector<Sarray>& Um )
       if( retval != cudaSuccess )
 	 cout << "Error in memcpy to dev_F in timestep loop retval = " <<
 	    cudaGetErrorString(retval) << endl;
-      //}
 #endif
 
 // save initial data on receiver records
@@ -2523,9 +2526,25 @@ void EW::timesteploop( vector<Sarray>& U, vector<Sarray>& Um )
 // Set up the  array for data communication
    setup_device_communication_array();
 
+#if WRITE_OTF2_TRACE
+   SCOREP_RECORDING_ON();
+   // Marks the beginning of code region to be repeated in simulation
+   SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_Loop", SCOREP_USER_REGION_TYPE_COMMON);
+   // Marks when to print a timer in simulation
+   if(!m_myrank) {
+       SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_sw4lite", SCOREP_USER_REGION_TYPE_COMMON);
+   }
+#endif
+
 // Begin time stepping loop
    for( int currentTimeStep = beginCycle; currentTimeStep <= mNumberOfTimeSteps; currentTimeStep++ )
    {    
+#if WRITE_OTF2_TRACE
+       if(!m_myrank) {
+           SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_sw4lite_region", SCOREP_USER_REGION_TYPE_COMMON);
+       }
+#endif
+
       time_measure[0] = MPI_Wtime();
       // Predictor 
       // Need U on device for evalRHS,
@@ -2875,7 +2894,27 @@ void EW::timesteploop( vector<Sarray>& U, vector<Sarray>& Um )
 	 for( int s = 0 ; s < 12 ; s++ )
 	    trdata[s+12*(currentTimeStep-beginCycle)]= time_measure[s];
 
+#if WRITE_OTF2_TRACE
+      if(!m_myrank) {
+          SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_sw4lite_region");
+      }
+#endif
    } // end time stepping loop
+
+#if WRITE_OTF2_TRACE
+   SCOREP_USER_REGION_BY_NAME_END("TRACER_Loop");
+#endif
+
+#if WRITE_OTF2_TRACE
+   if(!m_myrank) {
+       SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_sw4lite");
+   }
+#endif
+
+#if WRITE_OTF2_TRACE
+   SCOREP_RECORDING_OFF();
+#endif
+
    double time_end_solve = MPI_Wtime();
    print_execution_time( time_start_solve, time_end_solve, "solver phase" );
    if( m_output_detailed_timing )

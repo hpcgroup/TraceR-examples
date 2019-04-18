@@ -29,3 +29,7 @@ debug_cuda_surface/
 
 # emacs autosave files
 *~
+
+GPATH
+GRTAGS
+GTAGS
