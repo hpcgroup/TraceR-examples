@@ -73,6 +73,10 @@
 #include "StencilLimiter.h"
 
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 /* TimeSolverData
  * Class that contains options for time marching.
  */
@@ -337,8 +341,23 @@ void TimeSolverExplicitRK4<Device>::Solve()
 
    Device::fence();
 
+#if WRITE_OTF2_TRACE
+   SCOREP_RECORDING_ON();
+   // Marks the beginning of code region to be repeated in simulation
+   SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_Loop", SCOREP_USER_REGION_TYPE_COMMON);
+   // Marks when to print a timer in simulation
+   if(!my_id_) {
+       SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_miniaero", SCOREP_USER_REGION_TYPE_COMMON);
+   }
+#endif
    for (ts_data_.time_it = 1; ts_data_.time_it <= ts_data_.max_its; ++ts_data_.time_it)
    {
+#if WRITE_OTF2_TRACE
+       if(!my_id_) {
+           SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_miniaero_region", SCOREP_USER_REGION_TYPE_COMMON);
+       }
+#endif
+
       // Increment the time, do not need to worry about updating it for stages because no source terms depend on the time.
       ts_data_.time += ts_data_.dt;
 
@@ -488,7 +507,26 @@ void TimeSolverExplicitRK4<Device>::Solve()
       copy<Device> copy_solution( sol_np1_vec, sol_n_vec);
       Kokkos::parallel_for(nowned_cells, copy_solution);
 
+#if WRITE_OTF2_TRACE
+       if(!my_id_) {
+           SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_miniaero_region");
+       }
+#endif
+
    }
+#if WRITE_OTF2_TRACE
+  SCOREP_USER_REGION_BY_NAME_END("TRACER_Loop");
+#endif
+
+#if WRITE_OTF2_TRACE
+       if(!my_id_) {
+           SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_miniaero");
+       }
+#endif
+
+#if WRITE_OTF2_TRACE
+  SCOREP_RECORDING_OFF();
+#endif
 
    Device::fence();
    if(my_id_==0){

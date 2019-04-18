@@ -50,6 +50,10 @@
 
 #include <Kokkos_Core.hpp>
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 int main(int argc, char *argv[])
 {
 #ifdef MINIAERO_FPMATH_CHECK
@@ -59,6 +63,9 @@ int main(int argc, char *argv[])
   int num_procs, my_id;
 #if WITH_MPI
   MPI_Init(&argc,&argv);
+#if WRITE_OTF2_TRACE
+  SCOREP_RECORDING_OFF();
+#endif
   MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
   MPI_Comm_rank(MPI_COMM_WORLD, &my_id);
   double startTime = 0.0, endTime = 0.0;

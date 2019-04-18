@@ -1,13 +1,14 @@
 KOKKOS_PATH = ${HOME}/kokkos
-KOKKOS_DEVICES=OpenMP
+KOKKOS_DEVICES=Serial
 
 default: build
 	echo "Start Build"
 
-CXX = mpicxx
+SCOREP = $(HOME)/opt/scorep-5.0/bin/scorep --user --nocompiler --noopenmp --nopomp --nocuda --noopenacc --noopencl --nomemory
+CXX = $(SCOREP) mpicxx
 EXE = miniAero.mpi
 
-CXXFLAGS = -O3 -g -DWITH_MPI=1 -DATOMICS_FLUX
+CXXFLAGS = -O3 -g -DWITH_MPI=1 -DATOMICS_FLUX -DWRITE_OTF2_TRACE=1
 LINK = ${CXX}
 LINKFLAGS =  
 
