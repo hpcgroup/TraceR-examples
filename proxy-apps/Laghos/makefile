@@ -109,6 +109,7 @@ SOURCE_FILES = laghos.cpp laghos_solver.cpp laghos_assembly.cpp
 OBJECT_FILES1 = $(SOURCE_FILES:.cpp=.o)
 OBJECT_FILES = $(OBJECT_FILES1:.c=.o)
 HEADER_FILES = laghos_solver.hpp laghos_assembly.hpp
+SCOREP = $(HOME)/opt/scorep-5.0/bin/scorep --user --nocompiler --noopenmp --nopomp --nocuda --noopenacc --noopencl --nomemory
 
 # Targets
 
@@ -116,13 +117,13 @@ HEADER_FILES = laghos_solver.hpp laghos_assembly.hpp
 
 .SUFFIXES: .c .cpp .o
 .cpp.o:
-	cd $(<D); $(CCC) -c $(<F)
+	cd $(<D); $(SCOREP) $(CCC) -DWRITE_OTF2_TRACE=1 -c $(<F)
 .c.o:
-	cd $(<D); $(Ccc) -c $(<F)
+	cd $(<D); $(SCOREP) $(Ccc) -DWRITE_OTF2_TRACE=1 -c $(<F)
 
 laghos: override MFEM_DIR = $(MFEM_DIR1)
 laghos:	$(OBJECT_FILES) $(CONFIG_MK) $(MFEM_LIB_FILE)
-	$(CCC) -o laghos $(OBJECT_FILES) $(LIBS)
+	$(SCOREP) $(CCC) -DWRITE_OTF2_TRACE=1 -o laghos $(OBJECT_FILES) $(LIBS)
 
 all: laghos
 
