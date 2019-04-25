@@ -238,7 +238,7 @@ driver(const Box& global_box, Box& my_box,
 
   //Prepare to perform conjugate gradient solve:
 
-  LocalOrdinal max_iters = 200;
+  LocalOrdinal max_iters = 1;
   LocalOrdinal num_iters = 0;
   typedef typename TypeTraits<Scalar>::magnitude_type magnitude;
   magnitude rnorm = 0;

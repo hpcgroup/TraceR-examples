@@ -10,7 +10,7 @@ MINIFE_MATRIX_TYPE = -DMINIFE_CSR_MATRIX
 
 #-----------------------------------------------------------------------
 
-CFLAGS = -O3 -g
+CFLAGS = -O3 -g -DWRITE_OTF2_TRACE=1
 CXXFLAGS = $(CFLAGS)
 
 CPPFLAGS = -I. -I../utils -I../fem $(MINIFE_TYPES) $(MINIFE_MATRIX_TYPE) \
@@ -20,8 +20,12 @@ CPPFLAGS = -I. -I../utils -I../fem $(MINIFE_TYPES) $(MINIFE_MATRIX_TYPE) \
 LDFLAGS=
 LIBS=
 
-CXX=mpicxx
-CC=mpicc
+SCOREP=$(HOME)/opt/scorep-5.0/bin/scorep --user --nocompiler --noopenmp --nopomp --nocuda --noopenacc --noopencl --nomemory
+CXX=$(SCOREP) mpicxx
+CC=$(SCOREP) mpicc
+
+CXX_pure=mpicxx
+CC_pure=mpicc
 
 #CXX=g++
 #CC=gcc

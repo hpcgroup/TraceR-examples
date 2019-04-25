@@ -36,6 +36,10 @@
 
 #include <outstream.hpp>
 
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 namespace miniFE {
 
 template<typename Scalar>
@@ -148,8 +152,20 @@ cg_solve(OperatorType& A,
   os << "brkdown_tol = " << brkdown_tol << std::endl;
 #endif
 
+#if WRITE_OTF2_TRACE
+      SCOREP_RECORDING_ON();
+      SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_Loop", SCOREP_USER_REGION_TYPE_COMMON);
+      if( 0 == myproc ) {
+          SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_minife", SCOREP_USER_REGION_TYPE_COMMON);
+      }
+#endif
 
   for(LocalOrdinalType k=1; k <= max_iter && normr > tolerance; ++k) {
+#if WRITE_OTF2_TRACE
+      if( 0 == myproc) {
+          SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_minife_region", SCOREP_USER_REGION_TYPE_COMMON);
+      }
+#endif
     if (k == 1) {
       TICK(); waxpby(one, r, zero, r, p); TOCK(tWAXPY);
     }
@@ -194,6 +210,12 @@ cg_solve(OperatorType& A,
         my_cg_times[DOT] = tDOT;
         my_cg_times[MATVEC] = tMATVEC;
         my_cg_times[TOTAL] = mytimer() - total_time;
+
+#if WRITE_OTF2_TRACE
+        if( 0 == myproc ) {
+            SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_minife_region");
+        }
+#endif
         return;
       }
       else brkdown_tol = 0.1 * p_ap_dot;
@@ -213,7 +235,25 @@ cg_solve(OperatorType& A,
 #endif
 
     num_iters = k;
+
+#if WRITE_OTF2_TRACE
+    if( 0 == myproc ) {
+        SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_minife_region");
+    }
+#endif
+
   }
+
+#if WRITE_OTF2_TRACE
+  if( 0 == myproc ) {
+      SCOREP_USER_REGION_BY_NAME_END("TRACER_WallTime_minife");
+  }
+#endif
+
+#if WRITE_OTF2_TRACE
+  SCOREP_USER_REGION_BY_NAME_END("TRACER_Loop");
+  SCOREP_RECORDING_OFF();
+#endif
 
 #ifdef HAVE_MPI
 #ifdef USE_MPI_PCONTROL

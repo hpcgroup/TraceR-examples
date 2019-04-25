@@ -1,4 +1,7 @@
 *.o
 miniFE.x
-*.yaml
 miniFE_info.hpp
+miniFE*.yaml
+GPATH
+GRTAGS
+GTAGS

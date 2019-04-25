@@ -47,6 +47,11 @@
 #include <Parameters.hpp>
 #include <utils.hpp>
 
+
+#if WRITE_OTF2_TRACE
+#include <scorep/SCOREP_User.h>
+#endif
+
 namespace miniFE {
 
 //-------------------------------------------------------------
@@ -116,6 +121,9 @@ void initialize_mpi(int argc, char** argv, int& numprocs, int& myproc)
 {
 #ifdef HAVE_MPI
   MPI_Init(&argc, &argv);
+#if WRITE_OTF2_TRACE
+   SCOREP_RECORDING_OFF();
+#endif
   MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
   MPI_Comm_rank(MPI_COMM_WORLD, &myproc);
 #else

@@ -26,7 +26,7 @@ common_files:
 	./get_common_files
 
 generate_info:
-	./generate_info_header "$(CXX)" "$(CXXFLAGS)" "miniFE" "MINIFE"
+	./generate_info_header "$(CXX_pure)" "$(CXXFLAGS)" "miniFE" "MINIFE"
 
 test:all
 	./run_test
