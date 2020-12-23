@@ -91,7 +91,7 @@ int SweepSolver (Grid_Data *grid_data, bool block_jacobi)
   double part_last = 0.0;
   for(int iter = 0;iter < grid_data->niter;++ iter){
 #if WRITE_OTF2_TRACE
-    if(!mpi_rank) {
+    if(!mpi_rank && (iter % TIMER_PRINT_FREQ == 0)) {
       SCOREP_USER_REGION_BY_NAME_BEGIN("TRACER_WallTime_kripke_region", SCOREP_USER_REGION_TYPE_COMMON);
     }
 #endif
